@@ -3,23 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIRoot : MonoBehaviour
+namespace BaseFramework
 {
-    public Transform LayerRoot;
-    public Camera UICamera;
-    public RectTransform AdaptResolution;
-
-    private CanvasScaler canvasScaler;
-
-    private void Awake()
+    public class UIRoot : BaseMonoBehaviour
     {
-        canvasScaler = GetComponent<CanvasScaler>();
+        public Transform LayerRoot;
+        public Camera UICamera;
+        public RectTransform AdaptResolution;
 
-        if (Screen.height / Screen.width > canvasScaler.referenceResolution.y / canvasScaler.referenceResolution.x)
+        private CanvasScaler canvasScaler;
+
+        private void Awake()
         {
-            AdaptResolution.offsetMin = new Vector2(AdaptResolution.offsetMin.x, AdaptResolution.offsetMin.y + 44f);
+            canvasScaler = GetComponent<CanvasScaler>();
 
-            AdaptResolution.offsetMax = new Vector2(AdaptResolution.offsetMax.x, AdaptResolution.offsetMax.y - 44f);
+            if (Screen.height / Screen.width > canvasScaler.referenceResolution.y / canvasScaler.referenceResolution.x)
+            {
+                AdaptResolution.offsetMin = new Vector2(AdaptResolution.offsetMin.x, AdaptResolution.offsetMin.y + 44f);
+
+                AdaptResolution.offsetMax = new Vector2(AdaptResolution.offsetMax.x, AdaptResolution.offsetMax.y - 44f);
+            }
         }
     }
+
 }

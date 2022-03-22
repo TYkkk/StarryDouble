@@ -4,67 +4,71 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class DownloadManager : MonoSingleton<DownloadManager>
+namespace BaseFramework
 {
-    private readonly string configPath;
-
-    private Dictionary<string, string> downloadedTextData = new Dictionary<string, string>();
-    private const int downloadedTextDataCacheCount = 100;
-
-    private IEnumerator DownloadData<T>(string fileName, string rootPath, Action<string, byte[], Action<T>, bool> callback, Action<T> userCallback, Action errorCallback, bool needCache)
+    public class DownloadManager : MonoSingleton<DownloadManager>
     {
-        string url = $"{rootPath}/{fileName}";
+        private readonly string configPath;
 
-        UnityWebRequest request = UnityWebRequest.Get(url);
+        private Dictionary<string, string> downloadedTextData = new Dictionary<string, string>();
+        private const int downloadedTextDataCacheCount = 100;
 
-        yield return request.SendWebRequest();
-
-        if (request.isHttpError || request.isNetworkError)
+        private IEnumerator DownloadData<T>(string fileName, string rootPath, Action<string, byte[], Action<T>, bool> callback, Action<T> userCallback, Action errorCallback, bool needCache)
         {
-            MDebug.LogError(request.error);
-            errorCallback?.Invoke();
-            yield break;
+            string url = $"{rootPath}/{fileName}";
+
+            UnityWebRequest request = UnityWebRequest.Get(url);
+
+            yield return request.SendWebRequest();
+
+            if (request.isHttpError || request.isNetworkError)
+            {
+                MDebug.LogError(request.error);
+                errorCallback?.Invoke();
+                yield break;
+            }
+
+            callback?.Invoke(fileName, request.downloadHandler.data, userCallback, needCache);
         }
 
-        callback?.Invoke(fileName, request.downloadHandler.data, userCallback, needCache);
-    }
-
-    private void DownloadTextData(string fileName, Action<string> callback, Action errorCallback, bool needCache)
-    {
-        StartCoroutine(DownloadData(fileName, configPath, DownloadDataConvertToText, callback, errorCallback, needCache));
-    }
-
-    private void DownloadDataConvertToText(string fileName, byte[] data, Action<string> callback, bool needCache)
-    {
-        string result = System.Text.Encoding.Default.GetString(data);
-
-        if (needCache)
+        private void DownloadTextData(string fileName, Action<string> callback, Action errorCallback, bool needCache)
         {
-            if (!downloadedTextData.ContainsKey(fileName))
+            StartCoroutine(DownloadData(fileName, configPath, DownloadDataConvertToText, callback, errorCallback, needCache));
+        }
+
+        private void DownloadDataConvertToText(string fileName, byte[] data, Action<string> callback, bool needCache)
+        {
+            string result = System.Text.Encoding.Default.GetString(data);
+
+            if (needCache)
             {
-                if (downloadedTextData.Count > downloadedTextDataCacheCount)
+                if (!downloadedTextData.ContainsKey(fileName))
                 {
-                    downloadedTextData.Clear();
+                    if (downloadedTextData.Count > downloadedTextDataCacheCount)
+                    {
+                        downloadedTextData.Clear();
+                    }
+
+                    downloadedTextData.Add(fileName, result);
                 }
-
-                downloadedTextData.Add(fileName, result);
             }
+
+            callback?.Invoke(result);
         }
 
-        callback?.Invoke(result);
-    }
-
-    public void ResourceLoadText(string fileName, Action<string> callback, Action errorCallback = null, bool needCache = true)
-    {
-        if (needCache)
+        public void ResourceLoadText(string fileName, Action<string> callback, Action errorCallback = null, bool needCache = true)
         {
-            if (downloadedTextData.ContainsKey(fileName))
+            if (needCache)
             {
-                callback?.Invoke(downloadedTextData[fileName]);
-                return;
+                if (downloadedTextData.ContainsKey(fileName))
+                {
+                    callback?.Invoke(downloadedTextData[fileName]);
+                    return;
+                }
             }
-        }
 
-        DownloadTextData(fileName, callback, errorCallback, needCache);
+            DownloadTextData(fileName, callback, errorCallback, needCache);
+        }
     }
+
 }

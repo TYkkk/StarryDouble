@@ -3,19 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class GameManager : MonoSingleton<GameManager>, IManager
+namespace BaseFramework
 {
-    public override void Awake()
+    public class GameManager : MonoSingleton<GameManager>, IManager
     {
-        base.Awake();
+        public override void Awake()
+        {
+            base.Awake();
 
-        InitManager();
+            InitManager();
+        }
+
+        private void InitManager()
+        {
+            Instance.Init();
+            MonoBehaviourManager.Instance.Init();
+            DownloadManager.Instance.Init();
+            ConfigManager.Instance.Init();
+            //CameraManager.Instance.Init();
+            //UIManager.Instance.Init();
+        }
+
+        private void Start()
+        {
+            ConfigManager.Instance.LoadConfig();
+        }
     }
 
-    private void InitManager()
-    {
-        Instance.Init();
-        CameraManager.Instance.Init();
-        UIManager.Instance.Init();
-    }
 }

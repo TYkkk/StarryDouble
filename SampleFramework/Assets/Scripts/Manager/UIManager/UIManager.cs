@@ -2,161 +2,164 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UIManager : Singleton<UIManager>
+namespace BaseFramework
 {
-    public UIRoot UIRoot => uiRoot;
-
-    private UIRoot uiRoot;
-
-    private const string uiRootPath = "UI/UIRoot";
-
-    private UIRoot uiRootTemplate;
-
-    private readonly Dictionary<string, UIData> uiDataDict = new Dictionary<string, UIData>()
+    public class UIManager : Singleton<UIManager>
     {
-    };
+        public UIRoot UIRoot => uiRoot;
 
-    private static Dictionary<string, List<UIBase>> loadedUIDict;
+        private UIRoot uiRoot;
 
-    public override void Init()
-    {
-        base.Init();
+        private const string uiRootPath = "UI/UIRoot";
 
-        loadedUIDict = new Dictionary<string, List<UIBase>>();
+        private UIRoot uiRootTemplate;
 
-        InitUIRoot();
-    }
-
-    public override void Release()
-    {
-        base.Release();
-
-        loadedUIDict = null;
-
-        ClearUIRoot();
-    }
-
-    private void InitUIRoot()
-    {
-        if (uiRootTemplate == null)
+        private readonly Dictionary<string, UIData> uiDataDict = new Dictionary<string, UIData>()
         {
-            uiRootTemplate = Resources.Load<UIRoot>(uiRootPath);
+        };
+
+        private static Dictionary<string, List<UIBase>> loadedUIDict;
+
+        public override void Init()
+        {
+            base.Init();
+
+            loadedUIDict = new Dictionary<string, List<UIBase>>();
+
+            InitUIRoot();
         }
 
-        if (uiRootTemplate == null)
+        public override void Release()
         {
-            MDebug.LogError("uiRootTemplate Load Error");
-            return;
+            base.Release();
+
+            loadedUIDict = null;
+
+            ClearUIRoot();
         }
 
-        ClearUIRoot();
-
-        GameObject UIRootObj = Object.Instantiate(uiRootTemplate.gameObject);
-        uiRoot = UIRootObj.GetComponent<UIRoot>();
-    }
-
-    private void ClearUIRoot()
-    {
-        if (uiRoot != null)
+        private void InitUIRoot()
         {
-            Object.Destroy(uiRoot.gameObject);
-        }
-    }
-
-    public UIBase OpenUI(string uiName)
-    {
-        UIBase uiBase = GetOrCreateUI(uiName);
-
-        uiBase.Register();
-
-        uiBase.Opening();
-
-        uiBase.transform.SetParent(UIRoot.LayerRoot.GetChild((int)uiDataDict[uiName].Layer), false);
-
-        uiBase.Open();
-
-        return uiBase;
-    }
-
-    private UIBase GetOrCreateUI(string uiName)
-    {
-        if (loadedUIDict.ContainsKey(uiName))
-        {
-            if (loadedUIDict[uiName] != null && loadedUIDict[uiName].Count > 0)
+            if (uiRootTemplate == null)
             {
-                return loadedUIDict[uiName][0];
+                uiRootTemplate = Resources.Load<UIRoot>(uiRootPath);
+            }
+
+            if (uiRootTemplate == null)
+            {
+                MDebug.LogError("uiRootTemplate Load Error");
+                return;
+            }
+
+            ClearUIRoot();
+
+            GameObject UIRootObj = Object.Instantiate(uiRootTemplate.gameObject);
+            uiRoot = UIRootObj.GetComponent<UIRoot>();
+        }
+
+        private void ClearUIRoot()
+        {
+            if (uiRoot != null)
+            {
+                Object.Destroy(uiRoot.gameObject);
             }
         }
 
-        GameObject createUI = Object.Instantiate(Resources.Load<GameObject>(uiDataDict[uiName].UIPath));
-
-        UIBase uiBase = createUI.GetComponent<UIBase>();
-
-        uiBase.SetName(uiName);
-
-        if (!loadedUIDict.ContainsKey(uiName))
+        public UIBase OpenUI(string uiName)
         {
-            loadedUIDict.Add(uiName, new List<UIBase>());
+            UIBase uiBase = GetOrCreateUI(uiName);
+
+            uiBase.Register();
+
+            uiBase.Opening();
+
+            uiBase.transform.SetParent(UIRoot.LayerRoot.GetChild((int)uiDataDict[uiName].Layer), false);
+
+            uiBase.Open();
+
+            return uiBase;
         }
 
-        loadedUIDict[uiName].Add(uiBase);
-
-        return uiBase;
-    }
-
-    public void CloseUI(string uiName)
-    {
-        if (!loadedUIDict.ContainsKey(uiName))
+        private UIBase GetOrCreateUI(string uiName)
         {
-            return;
+            if (loadedUIDict.ContainsKey(uiName))
+            {
+                if (loadedUIDict[uiName] != null && loadedUIDict[uiName].Count > 0)
+                {
+                    return loadedUIDict[uiName][0];
+                }
+            }
+
+            GameObject createUI = Object.Instantiate(Resources.Load<GameObject>(uiDataDict[uiName].UIPath));
+
+            UIBase uiBase = createUI.GetComponent<UIBase>();
+
+            uiBase.SetName(uiName);
+
+            if (!loadedUIDict.ContainsKey(uiName))
+            {
+                loadedUIDict.Add(uiName, new List<UIBase>());
+            }
+
+            loadedUIDict[uiName].Add(uiBase);
+
+            return uiBase;
         }
 
-        for (int i = 0; i < loadedUIDict[uiName].Count; i++)
+        public void CloseUI(string uiName)
         {
-            loadedUIDict[uiName][i].UnRegister();
+            if (!loadedUIDict.ContainsKey(uiName))
+            {
+                return;
+            }
 
-            loadedUIDict[uiName][i].Close();
+            for (int i = 0; i < loadedUIDict[uiName].Count; i++)
+            {
+                loadedUIDict[uiName][i].UnRegister();
 
-            Object.Destroy(loadedUIDict[uiName][i].gameObject);
+                loadedUIDict[uiName][i].Close();
+
+                Object.Destroy(loadedUIDict[uiName][i].gameObject);
+            }
+
+            loadedUIDict.Remove(uiName);
         }
 
-        loadedUIDict.Remove(uiName);
+        public void CloseUI(UIBase uiBase)
+        {
+            uiBase.UnRegister();
+
+            uiBase.Close();
+
+            loadedUIDict[uiBase.UIName].Remove(uiBase);
+
+            Object.Destroy(uiBase.gameObject);
+        }
     }
 
-    public void CloseUI(UIBase uiBase)
+
+    public class UIData
     {
-        uiBase.UnRegister();
+        public string UIName;
+        public string UIPath;
+        public UILayer Layer;
 
-        uiBase.Close();
-
-        loadedUIDict[uiBase.UIName].Remove(uiBase);
-
-        Object.Destroy(uiBase.gameObject);
+        public UIData(string UIName, string UIPath, UILayer Layer)
+        {
+            this.UIName = UIName;
+            this.UIPath = UIPath;
+            this.Layer = Layer;
+        }
     }
-}
 
-
-public class UIData
-{
-    public string UIName;
-    public string UIPath;
-    public UILayer Layer;
-
-    public UIData(string UIName, string UIPath, UILayer Layer)
+    public enum UILayer
     {
-        this.UIName = UIName;
-        this.UIPath = UIPath;
-        this.Layer = Layer;
-    }
-}
-
-public enum UILayer
-{
-    Bottom,
-    Layer01,
-    Layer02,
-    Layer03,
-    Pop,
-    Top,
-    System,
+        Bottom,
+        Layer01,
+        Layer02,
+        Layer03,
+        Pop,
+        Top,
+        System,
+    } 
 }

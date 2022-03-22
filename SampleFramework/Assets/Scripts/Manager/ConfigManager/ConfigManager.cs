@@ -1,77 +1,57 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-public class ConfigManager : Singleton<ConfigManager>
+namespace BaseFramework
 {
-    private Dictionary<string, PlayerConfigData> PlayerConfigDataDict;
-
-    public override void Init()
+    public class ConfigManager : Singleton<ConfigManager>
     {
-        base.Init();
+        public const string OneConfigLoaded = "OneConfigLoaded";
+        public const string AllConfigLoaded = "AllConfigLoaded";
 
-        PlayerConfigDataDict = new Dictionary<string, PlayerConfigData>();
+        private ConfigReader configReader;
 
-        //LoadInitConfig();
-    }
-
-    public override void Release()
-    {
-        PlayerConfigDataDict.Clear();
-
-        base.Release();
-    }
-
-    public void LoadInitConfig()
-    {
-        LoadPlayerConfig();
-    }
-
-    private void LoadPlayerConfig()
-    {
-        DownloadManager.Instance.ResourceLoadText("player.txt", (data) =>
+        public override void Init()
         {
-            StringReader sr = new StringReader(data);
-            string temp = "";
-            while ((temp = sr.ReadLine()) != null)
+            base.Init();
+            EventManager.Register(AllConfigLoaded, AllConfigLoadedHandler);
+        }
+
+        public override void Release()
+        {
+            EventManager.UnRegister(AllConfigLoaded, AllConfigLoadedHandler);
+            base.Release();
+        }
+
+        public void LoadConfig()
+        {
+            IConfig[] configs = new IConfig[] {
+                new TestReadConfig(),
+                new TestReadConfig(),
+                new TestReadConfig(),
+                new TestReadConfig(),
+                new TestReadConfig(),
+                new TestReadConfig(),
+                new TestReadConfig(),
+                new TestReadConfig(),
+            };
+
+            if (configReader == null)
             {
-                string[] strs = temp.Split(',');
-                if (strs.Length > 0)
-                {
-                    PlayerConfigData playerConfigData = new PlayerConfigData();
-                    playerConfigData.ID = strs[0];
-                    playerConfigData.Name = strs[1];
-                    playerConfigData.Icon = strs[2];
-                    playerConfigData.BasePropertyID = strs[3];
-                    playerConfigData.BaseStateID = strs[4];
-                    playerConfigData.BaseBuffID = strs[5];
-
-                    if (PlayerConfigDataDict.ContainsKey(playerConfigData.ID))
-                    {
-                        MDebug.LogError("Player Config Contains Repeated ID");
-                        continue;
-                    }
-
-                    PlayerConfigDataDict.Add(playerConfigData.ID, playerConfigData);
-                }
+                GameObject reader = new GameObject("configReader");
+                configReader = reader.AddComponent<ConfigReader>();
             }
-        }, LoadConfigError, false);
+
+            configReader.SetLoadConfigs(configs);
+            configReader.StartLoad();
+        }
+
+        private void AllConfigLoadedHandler(IEventData data)
+        {
+            var cr = data as EventData<ConfigReader>;
+            UnityEngine.Object.Destroy(cr.Data.gameObject);
+        }
     }
-
-    private void LoadConfigError()
-    {
-
-    }
-}
-
-
-public class PlayerConfigData
-{
-    public string ID;
-    public string Name;
-    public string Icon;
-    public string BasePropertyID;
-    public string BaseStateID;
-    public string BaseBuffID;
 }

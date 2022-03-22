@@ -2,28 +2,31 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Singleton<T> : IManager where T : new()
+namespace BaseFramework
 {
-    public static T Instance
+    public class Singleton<T> : IManager where T : new()
     {
-        get
+        public static T Instance
         {
-            if (instance == null)
+            get
             {
-                instance = new T();
+                if (instance == null)
+                {
+                    instance = new T();
+                }
+
+                return instance;
             }
-
-            return instance;
         }
-    }
 
-    private static T instance;
+        private static T instance;
 
-    public virtual void Init()
-    {
-    }
+        public virtual void Init()
+        {
+        }
 
-    public virtual void Release()
-    {
-    }
+        public virtual void Release()
+        {
+        }
+    } 
 }

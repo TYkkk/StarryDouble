@@ -2,50 +2,61 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MonoSingleton<T> : MonoBehaviour, IManager where T : MonoBehaviour
+namespace BaseFramework
 {
-    private static T instance;
-
-    public static T Instance
+    public class MonoSingleton<T> : BaseMonoBehaviour, IManager where T : BaseMonoBehaviour
     {
-        get
+        private static bool isCreated = false;
+
+        private static T instance;
+
+        public static T Instance
+        {
+            get
+            {
+                if (instance == null && !isCreated)
+                {
+                    T[] objs = FindObjectsOfType<T>();
+
+                    if (objs.Length > 0)
+                    {
+                        MDebug.LogError($"MonoSingleton {typeof(T).Name} Should Never Be More Than 1 In Scene");
+
+                        return objs[0];
+                    }
+
+                    GameObject monoSingleton = new GameObject(typeof(T).Name);
+                    instance = monoSingleton.AddComponent<T>();
+
+                    isCreated = true;
+                }
+
+                return instance;
+            }
+        }
+
+        public virtual void Awake()
         {
             if (instance == null)
             {
-                T[] objs = FindObjectsOfType<T>();
+                instance = GetComponent<T>();
 
-                if (objs.Length > 0)
-                {
-                    MDebug.LogError($"MonoSingleton {typeof(T).Name} Should Never Be More Than 1 In Scene");
-
-                    return objs[0];
-                }
-
-                GameObject monoSingleton = new GameObject(typeof(T).Name);
-                instance = monoSingleton.AddComponent<T>();
-
-                DontDestroyOnLoad(monoSingleton);
+                DontDestroyOnLoad(gameObject);
             }
-
-            return instance;
         }
-    }
 
-    public virtual void Awake()
-    {
-        if (instance == null)
+        public virtual void Init()
         {
-            instance = GetComponent<T>();
+        }
 
-            DontDestroyOnLoad(gameObject);
+        public virtual void Release()
+        {
+        }
+
+        private void OnDestroy()
+        {
+
         }
     }
 
-    public void Init()
-    {
-    }
-
-    public void Release()
-    {
-    }
 }

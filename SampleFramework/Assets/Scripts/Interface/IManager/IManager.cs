@@ -2,9 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IManager
+namespace BaseFramework
 {
-    void Init();
+    public interface IManager
+    {
+        void Init();
 
-    void Release();
+        void Release();
+    }
+
 }

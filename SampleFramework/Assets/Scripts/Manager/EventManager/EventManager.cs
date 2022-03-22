@@ -2,102 +2,105 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public delegate void EventHandler(IEventData data);
-
-public static class EventManager
+namespace BaseFramework
 {
-    private static Dictionary<string, EventHandler> handlerDict = new Dictionary<string, EventHandler>();
+    public delegate void EventHandler(IEventData data);
 
-    public static void Register(string eventName, EventHandler eventHandler)
+    public static class EventManager
     {
-        if (eventHandler == null)
+        private static Dictionary<string, EventHandler> handlerDict = new Dictionary<string, EventHandler>();
+
+        public static void Register(string eventName, EventHandler eventHandler)
         {
-            return;
+            if (eventHandler == null)
+            {
+                return;
+            }
+
+            if (!handlerDict.ContainsKey(eventName))
+            {
+                handlerDict.Add(eventName, null);
+            }
+
+            handlerDict[eventName] += eventHandler;
         }
 
-        if (!handlerDict.ContainsKey(eventName))
+        public static void UnRegister(string eventName)
         {
-            handlerDict.Add(eventName, null);
+            if (handlerDict.ContainsKey(eventName))
+            {
+                handlerDict.Remove(eventName);
+            }
         }
 
-        handlerDict[eventName] += eventHandler;
-    }
-
-    public static void UnRegister(string eventName)
-    {
-        if (handlerDict.ContainsKey(eventName))
+        public static void UnRegister(string eventName, EventHandler eventHandler)
         {
-            handlerDict.Remove(eventName);
+            if (handlerDict.ContainsKey(eventName))
+            {
+                handlerDict[eventName] -= eventHandler;
+            }
         }
-    }
 
-    public static void UnRegister(string eventName, EventHandler eventHandler)
-    {
-        if (handlerDict.ContainsKey(eventName))
+        public static void Clear()
         {
-            handlerDict[eventName] -= eventHandler;
+            handlerDict.Clear();
         }
-    }
 
-    public static void Clear()
-    {
-        handlerDict.Clear();
-    }
-
-    public static void Fire(string eventName, IEventData data)
-    {
-        if (handlerDict.ContainsKey(eventName))
+        public static void Fire(string eventName, IEventData data)
         {
-            handlerDict[eventName]?.Invoke(data);
+            if (handlerDict.ContainsKey(eventName))
+            {
+                handlerDict[eventName]?.Invoke(data);
+            }
         }
-    }
 
-    public static void Fire(string eventName)
-    {
-        Fire(eventName, null);
-    }
-}
-
-public interface IEventData
-{
-    string Name { get; }
-    object Sender { get; }
-}
-
-public class BaseEventData : IEventData
-{
-    public string Name
-    {
-        get
+        public static void Fire(string eventName)
         {
-            return GetType().FullName;
+            Fire(eventName, null);
         }
     }
 
-    public object Sender
+    public interface IEventData
     {
-        get; private set;
+        string Name { get; }
+        object Sender { get; }
     }
 
-    public BaseEventData()
+    public class BaseEventData : IEventData
     {
+        public string Name
+        {
+            get
+            {
+                return GetType().FullName;
+            }
+        }
+
+        public object Sender
+        {
+            get; private set;
+        }
+
+        public BaseEventData()
+        {
+
+        }
+
+        public BaseEventData(object sender)
+        {
+            Sender = sender;
+        }
 
     }
 
-    public BaseEventData(object sender)
+    public class EventData<T> : BaseEventData
     {
-        Sender = sender;
-    }
+        private readonly T _data;
+        public T Data { get { return _data; } }
 
-}
-
-public class EventData<T> : BaseEventData
-{
-    private readonly T _data;
-    public T Data { get { return _data; } }
-
-    public EventData(T data)
-    {
-        _data = data;
-    }
+        public EventData(T data)
+        {
+            _data = data;
+        }
+    } 
 }

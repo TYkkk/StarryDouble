@@ -2,41 +2,45 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraManager : Singleton<CameraManager>
+namespace BaseFramework
 {
-    public Camera MainCamera => mainCamera;
-
-    private Camera mainCamera;
-
-    public override void Init()
+    public class CameraManager : Singleton<CameraManager>
     {
-        base.Init();
+        public Camera MainCamera => mainCamera;
 
-        InitMainCamera();
-    }
+        private Camera mainCamera;
 
-    public override void Release()
-    {
-        base.Release();
-
-        ClearMainCamera();
-    }
-
-    private void InitMainCamera()
-    {
-        ClearMainCamera();
-
-        GameObject obj = new GameObject("MainCamera");
-        mainCamera = obj.AddComponent<Camera>();
-        mainCamera.tag = "MainCamera";
-        obj.AddComponent<AudioListener>();
-    }
-
-    private void ClearMainCamera()
-    {
-        if (mainCamera != null)
+        public override void Init()
         {
-            Object.Destroy(mainCamera.gameObject);
+            base.Init();
+
+            InitMainCamera();
+        }
+
+        public override void Release()
+        {
+            base.Release();
+
+            ClearMainCamera();
+        }
+
+        private void InitMainCamera()
+        {
+            ClearMainCamera();
+
+            GameObject obj = new GameObject("MainCamera");
+            mainCamera = obj.AddComponent<Camera>();
+            mainCamera.tag = "MainCamera";
+            obj.AddComponent<AudioListener>();
+        }
+
+        private void ClearMainCamera()
+        {
+            if (mainCamera != null)
+            {
+                Object.Destroy(mainCamera.gameObject);
+            }
         }
     }
+
 }

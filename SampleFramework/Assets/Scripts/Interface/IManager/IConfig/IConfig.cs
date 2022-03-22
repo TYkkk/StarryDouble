@@ -4,7 +4,10 @@ using UnityEngine;
 
 namespace BaseFramework
 {
-    public static class UINames
+    public interface IConfig
     {
-    } 
+        void Read();
+
+        bool Loaded { get; set; }
+    }
 }
