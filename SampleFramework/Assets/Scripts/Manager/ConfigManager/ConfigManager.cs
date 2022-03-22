@@ -28,14 +28,7 @@ namespace BaseFramework
         public void LoadConfig()
         {
             IConfig[] configs = new IConfig[] {
-                new TestReadConfig(),
-                new TestReadConfig(),
-                new TestReadConfig(),
-                new TestReadConfig(),
-                new TestReadConfig(),
-                new TestReadConfig(),
-                new TestReadConfig(),
-                new TestReadConfig(),
+
             };
 
             if (configReader == null)
