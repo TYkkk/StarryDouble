@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +9,13 @@ namespace BaseFramework
     {
         public string UIName => uiName;
 
+        private string guid;
+
+        public string Guid => guid;
+
         private string uiName;
+
+        public Dictionary<string, System.Object> Param = new Dictionary<string, System.Object>();
 
         public virtual void Awake()
         {
@@ -44,8 +51,9 @@ namespace BaseFramework
         {
         }
 
-        public void SetName(string uiName)
+        public void InitUI(string uiName)
         {
+            guid = System.Guid.NewGuid().ToString("N");
             this.uiName = uiName;
         }
     }

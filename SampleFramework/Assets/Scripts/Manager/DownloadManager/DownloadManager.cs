@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -9,66 +10,139 @@ namespace BaseFramework
     public class DownloadManager : MonoSingleton<DownloadManager>
     {
         private readonly string configPath;
+        private readonly string texturePath;
+        private readonly string assetBundlePath;
 
-        private Dictionary<string, string> downloadedTextData = new Dictionary<string, string>();
-        private const int downloadedTextDataCacheCount = 100;
-
-        private IEnumerator DownloadData<T>(string fileName, string rootPath, Action<string, byte[], Action<T>, bool> callback, Action<T> userCallback, Action errorCallback, bool needCache)
+        public override void Init()
         {
-            string url = $"{rootPath}/{fileName}";
+            base.Init();
+        }
 
-            UnityWebRequest request = UnityWebRequest.Get(url);
+        public override void Release()
+        {
+            base.Release();
+        }
+
+        #region Private Method
+
+        #region Download
+        private IEnumerator DownloadData<T>(string fileName, string rootPath, Action<string, DownloadHandler, Action<T>, bool> downloadedCallback, Action<T> successCallback, Action errorCallback, bool needCache = false, int retryCount = 0)
+        {
+            string downloadPath = $"{rootPath}{fileName}";
+            Uri uri = new Uri(downloadPath);
+
+            UnityWebRequest request = GetUnityWebRequest<T>(uri);
 
             yield return request.SendWebRequest();
 
             if (request.isHttpError || request.isNetworkError)
             {
-                MDebug.LogError(request.error);
-                errorCallback?.Invoke();
+                if (retryCount > 0)
+                {
+                    retryCount--;
+                    MDebug.LogError(request.error);
+                    yield return DownloadData(fileName, rootPath, downloadedCallback, successCallback, errorCallback, needCache, retryCount);
+                }
+                else
+                {
+                    MDebug.LogError(request.error);
+                    errorCallback?.Invoke();
+                }
                 yield break;
             }
 
-            callback?.Invoke(fileName, request.downloadHandler.data, userCallback, needCache);
+            downloadedCallback?.Invoke(fileName, request.downloadHandler, successCallback, needCache);
         }
 
-        private void DownloadTextData(string fileName, Action<string> callback, Action errorCallback, bool needCache)
+        private static UnityWebRequest GetUnityWebRequest<T>(Uri uri)
         {
-            StartCoroutine(DownloadData(fileName, configPath, DownloadDataConvertToText, callback, errorCallback, needCache));
-        }
-
-        private void DownloadDataConvertToText(string fileName, byte[] data, Action<string> callback, bool needCache)
-        {
-            string result = System.Text.Encoding.Default.GetString(data);
-
-            if (needCache)
+            UnityWebRequest request;
+            if (typeof(T) == typeof(Texture) || typeof(T) == typeof(Texture2D))
             {
-                if (!downloadedTextData.ContainsKey(fileName))
-                {
-                    if (downloadedTextData.Count > downloadedTextDataCacheCount)
-                    {
-                        downloadedTextData.Clear();
-                    }
-
-                    downloadedTextData.Add(fileName, result);
-                }
+                request = UnityWebRequestTexture.GetTexture(uri);
             }
+            else if (typeof(T) == typeof(AssetBundle))
+            {
+                request = UnityWebRequestAssetBundle.GetAssetBundle(uri);
+            }
+            else
+            {
+                request = UnityWebRequest.Get(uri);
+            }
+
+            return request;
+        }
+        #endregion
+
+        #region Download Text
+        private void DownloadDataConvertToText(string fileName, DownloadHandler downloadHandler, Action<string> callback, bool needCache)
+        {
+            string result = System.Text.Encoding.UTF8.GetString(downloadHandler.data);
 
             callback?.Invoke(result);
         }
+        #endregion
 
-        public void ResourceLoadText(string fileName, Action<string> callback, Action errorCallback = null, bool needCache = true)
+        #region Download AssetBundle
+        private void DownloadDataConvertToAssetBundle(string fileName, DownloadHandler downloadHandler, Action<AssetBundle> callback, bool needCache)
         {
-            if (needCache)
+            if (!(downloadHandler is DownloadHandlerAssetBundle))
             {
-                if (downloadedTextData.ContainsKey(fileName))
-                {
-                    callback?.Invoke(downloadedTextData[fileName]);
-                    return;
-                }
+                return;
             }
 
-            DownloadTextData(fileName, callback, errorCallback, needCache);
+            DownloadHandlerAssetBundle handlerAssetBundle = downloadHandler as DownloadHandlerAssetBundle;
+
+            callback?.Invoke(handlerAssetBundle.assetBundle);
         }
+        #endregion
+
+        #region Download Texture
+        private void DownloadDataConvertToTexture(string fileName, DownloadHandler downloadHandler, Action<Texture> callback, bool needCache)
+        {
+            if (!(downloadHandler is DownloadHandlerTexture))
+            {
+                return;
+            }
+
+            DownloadHandlerTexture handlerTexture = downloadHandler as DownloadHandlerTexture;
+
+            callback?.Invoke(handlerTexture.texture);
+        }
+        #endregion
+
+        #region Download Data
+        private void DownloadDataConvertBytes(string fileName, DownloadHandler downloadHandler, Action<byte[]> callback, bool needCache)
+        {
+            callback?.Invoke(downloadHandler.data);
+        }
+        #endregion
+
+        #endregion
+
+        #region Public Method
+
+        public void ResourceLoadText(string fileName, Action<string> callback, Action errorCallback = null, bool needCache = true, int retryCount = 0)
+        {
+            StartCoroutine(DownloadData(fileName, configPath, DownloadDataConvertToText, callback, errorCallback, needCache, retryCount));
+        }
+
+        public void ResourceLoadTexture(string fileName, Action<Texture> callback, Action errorCallback = null, bool needCache = true, int retryCount = 0)
+        {
+            StartCoroutine(DownloadData(fileName, texturePath, DownloadDataConvertToTexture, callback, errorCallback, needCache, retryCount));
+        }
+
+        public void ResourceLoadData(string fileName, Action<byte[]> callback, Action errorCallback = null, int retryCount = 0)
+        {
+            StartCoroutine(DownloadData(fileName, "", DownloadDataConvertBytes, callback, errorCallback, false, retryCount));
+        }
+
+        public void ResourceLoadAssetBundle(string fileName, Action<AssetBundle> callback, Action errorCallback = null, int retryCount = 0)
+        {
+            StartCoroutine(DownloadData(fileName, assetBundlePath, DownloadDataConvertToAssetBundle, callback, errorCallback, false, retryCount));
+        }
+
+        #endregion
     }
 
 }

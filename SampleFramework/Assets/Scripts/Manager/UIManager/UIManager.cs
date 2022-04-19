@@ -80,6 +80,22 @@ namespace BaseFramework
             return uiBase;
         }
 
+        public UIBase OpenUIByGuid(string uiName, string guid)
+        {
+            if (loadedUIDict.ContainsKey(uiName))
+            {
+                foreach (var child in loadedUIDict[uiName])
+                {
+                    if (child.Guid == guid)
+                    {
+                        return child;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         private UIBase GetOrCreateUI(string uiName)
         {
             if (loadedUIDict.ContainsKey(uiName))
@@ -94,7 +110,7 @@ namespace BaseFramework
 
             UIBase uiBase = createUI.GetComponent<UIBase>();
 
-            uiBase.SetName(uiName);
+            uiBase.InitUI(uiName);
 
             if (!loadedUIDict.ContainsKey(uiName))
             {
@@ -161,5 +177,5 @@ namespace BaseFramework
         Pop,
         Top,
         System,
-    } 
+    }
 }
