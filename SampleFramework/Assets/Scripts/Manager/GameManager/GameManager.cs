@@ -27,7 +27,7 @@ namespace BaseFramework
 
         private void Start()
         {
-            SocketHelper.Instance.InitConnect();
+            //SocketHelper.Instance.InitConnect();
         }
 
         private void OnDestroy()
