@@ -17,6 +17,10 @@ namespace BaseFramework
 
         public Dictionary<string, System.Object> Param = new Dictionary<string, System.Object>();
 
+        private bool isOpened;
+
+        public bool IsOpened => isOpened;
+
         public virtual void Awake()
         {
         }
@@ -32,6 +36,7 @@ namespace BaseFramework
 
         public virtual void Open()
         {
+            isOpened = true;
         }
 
         public virtual void Start()
@@ -45,6 +50,7 @@ namespace BaseFramework
 
         public virtual void Close()
         {
+            isOpened = false;
         }
 
         public virtual void OnDestroy()

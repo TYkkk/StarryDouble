@@ -69,6 +69,16 @@ namespace BaseFramework
         {
             UIBase uiBase = GetOrCreateUI(uiName);
 
+            if (uiBase == null)
+            {
+                return null;
+            }
+
+            if (uiBase.IsOpened)
+            {
+                return uiBase;
+            }
+
             uiBase.Register();
 
             uiBase.Opening();
@@ -159,12 +169,14 @@ namespace BaseFramework
         public string UIName;
         public string UIPath;
         public UILayer Layer;
+        public bool Multi;
 
-        public UIData(string UIName, string UIPath, UILayer Layer)
+        public UIData(string uiName, string uiPath, UILayer layer, bool multi = false)
         {
-            this.UIName = UIName;
-            this.UIPath = UIPath;
-            this.Layer = Layer;
+            UIName = uiName;
+            UIPath = uiPath;
+            this.Layer = layer;
+            this.Multi = multi;
         }
     }
 
