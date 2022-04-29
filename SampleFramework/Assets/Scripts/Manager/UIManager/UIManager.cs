@@ -65,7 +65,7 @@ namespace BaseFramework
             }
         }
 
-        public UIBase OpenUI(string uiName)
+        public UIBase OpenUI(string uiName, Dictionary<string, System.Object> param = null)
         {
             UIBase uiBase = GetOrCreateUI(uiName);
 
@@ -77,6 +77,17 @@ namespace BaseFramework
             if (uiBase.IsOpened)
             {
                 return uiBase;
+            }
+
+            if (param != null)
+            {
+                foreach (var child in param.Keys)
+                {
+                    if (!uiBase.Param.ContainsKey(child))
+                    {
+                        uiBase.Param.Add(child, param[child]);
+                    }
+                }
             }
 
             uiBase.Register();
