@@ -37,15 +37,15 @@ namespace BaseFramework
 
             if (request.isHttpError || request.isNetworkError)
             {
+                MDebug.LogError(request.error);
+
                 if (retryCount > 0)
                 {
                     retryCount--;
-                    MDebug.LogError(request.error);
                     yield return DownloadData(fileName, rootPath, downloadedCallback, successCallback, errorCallback, needCache, retryCount);
                 }
                 else
                 {
-                    MDebug.LogError(request.error);
                     errorCallback?.Invoke();
                 }
                 yield break;
