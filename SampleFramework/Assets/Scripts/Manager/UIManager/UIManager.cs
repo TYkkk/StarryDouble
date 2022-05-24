@@ -148,6 +148,11 @@ namespace BaseFramework
 
             for (int i = 0; i < loadedUIDict[uiName].Count; i++)
             {
+                if (loadedUIDict[uiName][i] == null)
+                {
+                    continue;
+                }
+
                 loadedUIDict[uiName][i].UnRegister();
 
                 loadedUIDict[uiName][i].Close();
