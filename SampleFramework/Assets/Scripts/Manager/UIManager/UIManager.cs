@@ -14,10 +14,6 @@ namespace BaseFramework
 
         private UIRoot uiRootTemplate;
 
-        private readonly Dictionary<string, UIData> uiDataDict = new Dictionary<string, UIData>()
-        {
-        };
-
         private static Dictionary<string, List<UIBase>> loadedUIDict;
 
         public override void Init()
@@ -94,7 +90,7 @@ namespace BaseFramework
 
             uiBase.Opening();
 
-            uiBase.transform.SetParent(UIRoot.LayerRoot.GetChild((int)uiDataDict[uiName].Layer), false);
+            uiBase.transform.SetParent(UIRoot.LayerRoot.GetChild((int)UIDataSetting.UIDataSettingDict[uiName].Layer), false);
 
             uiBase.Open();
 
@@ -126,8 +122,8 @@ namespace BaseFramework
                     return loadedUIDict[uiName][0];
                 }
             }
-
-            GameObject createUI = Object.Instantiate(Resources.Load<GameObject>(uiDataDict[uiName].UIPath));
+            
+            GameObject createUI = Object.Instantiate(Resources.Load<GameObject>(UIDataSetting.UIDataSettingDict[uiName].UIPath));
 
             UIBase uiBase = createUI.GetComponent<UIBase>();
 
