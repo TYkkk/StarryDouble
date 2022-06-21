@@ -17,28 +17,33 @@ namespace BaseFramework
         private void InitManager()
         {
             Instance.Init();
+            ExceptionHandlerManager.Instance.Init();
             MonoBehaviourManager.Instance.Init();
             DownloadManager.Instance.Init();
             ConfigManager.Instance.Init();
             CameraManager.Instance.Init();
             UIManager.Instance.Init();
-            SocketHelper.Instance.Init();
         }
 
         private void Start()
         {
-            //SocketHelper.Instance.InitConnect();
+            gameObject.AddComponent<Test>();
         }
 
         private void OnDestroy()
         {
+            ReleaseManager();
+        }
+
+        private void ReleaseManager()
+        {
             Instance.Release();
-            MonoBehaviourManager.Instance.Release();
-            DownloadManager.Instance.Release();
+            ExceptionHandlerManager.Instance.Release();
+            MonoBehaviourManager.Instance?.Release();
+            DownloadManager.Instance?.Release();
             ConfigManager.Instance.Release();
             CameraManager.Instance.Release();
             UIManager.Instance.Release();
-            SocketHelper.Instance.Release();
         }
     }
 
