@@ -6,13 +6,21 @@ namespace BaseFramework
 {
     public class Singleton<T> : IManager where T : new()
     {
+        private static readonly object locker = new object();
+
         public static T Instance
         {
             get
             {
                 if (instance == null)
                 {
-                    instance = new T();
+                    lock (locker)
+                    {
+                        if (instance == null)
+                        {
+                            instance = new T();
+                        }
+                    }
                 }
 
                 return instance;
@@ -28,5 +36,5 @@ namespace BaseFramework
         public virtual void Release()
         {
         }
-    } 
+    }
 }
