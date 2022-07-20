@@ -27,7 +27,6 @@ namespace BaseFramework
 
         private void Start()
         {
-            gameObject.AddComponent<Test>();
         }
 
         private void OnDestroy()
