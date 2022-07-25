@@ -6,5 +6,6 @@ namespace BaseFramework
 {
     public static class UINames
     {
-    } 
+        public const string MainPanel = "MainPanel";
+    }
 }
