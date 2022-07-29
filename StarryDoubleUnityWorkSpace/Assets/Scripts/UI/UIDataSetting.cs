@@ -8,7 +8,7 @@ namespace BaseFramework
     {
         public static Dictionary<string, UIData> UIDataSettingDict = new Dictionary<string, UIData>()
         {
-            {UINames.MainPanel,new UIData(UINames.MainPanel,"MainPanel",UILayer.Layer02) }
+            {UINames.MainPanel,new UIData(UINames.MainPanel,"UI/MainPanel",UILayer.Layer02) }
         };
 
         public static UIData GetUIData(string uiName)

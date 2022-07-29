@@ -27,6 +27,7 @@ namespace BaseFramework
 
         private void Start()
         {
+            UIManager.Instance.OpenUI(UINames.MainPanel);
         }
 
         private void OnDestroy()
