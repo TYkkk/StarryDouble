@@ -16,6 +16,9 @@ public class MainPanel : UIBase
     public ShopCardInfo[] ShopCardInfos;
     public Transform CenterRoot;
 
+    public Text RefreshIndexText;
+    public Text InfoText;
+
     struct ProbabilityData
     {
         public int Level_1;
@@ -62,7 +65,7 @@ public class MainPanel : UIBase
     private const int level_3CardAloneMaxNum = 18;
     private const int level_5CardAloneMaxNum = 10;
 
-    private const int initGoldNum = 50;
+    private const int initGoldNum = 100;
     private const int refreshCost = 2;
 
     private Dictionary<int, CardData> configCardDatas;
@@ -78,6 +81,10 @@ public class MainPanel : UIBase
     private bool gameInit = false;
 
     private ProbabilityData effectiveProbability;
+
+    private int refreshIndex = 0;
+
+    private int refreshCount = 0;
 
     public override void Awake()
     {
@@ -148,7 +155,22 @@ public class MainPanel : UIBase
 
         ReturnStandbyAreaCardToPool();
 
-        var levels = GetRefreshCardLevelDatas();
+        if (refreshIndex != 4)
+        {
+            NormalRefresh();
+        }
+        else
+        {
+            SpecialRefresh();
+        }
+
+        refreshCount += 1;
+        InfoText.text = $"已刷新{refreshCount}次";
+    }
+
+    private void NormalRefresh()
+    {
+        var levels = GetRefreshCardLevelDatas(ShopCardInfos.Length);
 
         for (int i = 0; i < ShopCardInfos.Length; i++)
         {
@@ -156,6 +178,43 @@ public class MainPanel : UIBase
             cardDataPool[levels[i]][data.CardID]--;
             ShopCardInfos[i].SetData(data);
         }
+
+        ChangeRefreshIndex(refreshIndex + 1);
+    }
+
+    private void SpecialRefresh()
+    {
+        if (centerAreaMaxStarCardIDs.Contains(CardDataConst.Target_Level_3_ID))
+        {
+            NormalRefresh();
+        }
+        else
+        {
+            int speCount = Random.Range(3, ShopCardInfos.Length + 1);
+            int otherCount = ShopCardInfos.Length - speCount;
+            var levels = GetRefreshCardLevelDatas(otherCount);
+            List<CardData> result = new List<CardData>();
+            for (int i = 0; i < otherCount; i++)
+            {
+                var data = GetRandomCardByLevel(levels[i]);
+                cardDataPool[levels[i]][data.CardID]--;
+                result.Add(data);
+            }
+
+            for (int i = 0; i < speCount; i++)
+            {
+                var data = configCardDatas[CardDataConst.Target_Level_3_ID];
+                cardDataPool[data.Level][data.CardID]--;
+                result.Add(data);
+            }
+
+            for (int i = 0; i < ShopCardInfos.Length; i++)
+            {
+                ShopCardInfos[i].SetData(result[i]);
+            }
+        }
+
+        ChangeRefreshIndex(0);
     }
 
     private CardData GetRandomCardByLevel(int level)
@@ -281,14 +340,14 @@ public class MainPanel : UIBase
         UpdateGoldData();
     }
 
-    private int[] GetRefreshCardLevelDatas()
+    private int[] GetRefreshCardLevelDatas(int length)
     {
         if (!gameInit)
         {
             return null;
         }
 
-        int[] result = new int[ShopCardInfos.Length];
+        int[] result = new int[length];
 
         for (int i = 0; i < result.Length; i++)
         {
@@ -363,7 +422,18 @@ public class MainPanel : UIBase
 
         InitCardPool();
 
+        ChangeRefreshIndex(0);
+
+        refreshCount = 0;
+        InfoText.text = "";
+
         gameInit = true;
+    }
+
+    private void ChangeRefreshIndex(int index)
+    {
+        refreshIndex = index;
+        RefreshIndexText.text = $"星界龙刷新：{index}/4";
     }
 
     private void ShopCardClickedEventHandler(IEventData data)
@@ -414,6 +484,12 @@ public class MainPanel : UIBase
             if (newCard.Star == 3)
             {
                 centerAreaMaxStarCardIDs.Add(newCard.ConfigData.CardID);
+
+                CardEntityData cardEntityData = new CardEntityData();
+                cardEntityData.ConfigData = newCard.ConfigData;
+                cardEntityData.Star = 2;
+                CreateEntityCardInfo(cardEntityData);
+
                 return newCard;
             }
 
@@ -481,6 +557,8 @@ public class MainPanel : UIBase
         int s = info.Data.Star;
 
         GoldChange((2 * s * s + (-4) * s + 3) * info.Data.ConfigData.Price - 1);
+
+        cardDataPool[info.Data.ConfigData.Level][info.Data.ConfigData.CardID] = Mathf.Clamp(cardDataPool[info.Data.ConfigData.Level][info.Data.ConfigData.CardID] + (2 * s * s + (-4) * s + 3), 0, level_3CardAloneMaxNum);
 
         Destroy(info.gameObject);
     }
